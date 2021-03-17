@@ -462,7 +462,7 @@ export default {
 
         Object.assign(this.desserts[this.editedIndex], this.editedItem);
 
-        ipcRenderer.send("editRow", this.editedIndex);
+        ipcRenderer.send("editRow", { index: this.editedIndex, dataChanged: this.editedItem});
 
         this.dialog = false;
 
@@ -474,22 +474,17 @@ export default {
       } else {
         if (validateInputs) {
           newProduct.fecha = this.formatDate(this.date);
-          // this.desserts.push(this.editedItem);
+          this.desserts.push(this.editedItem);
 
-          // ipcRenderer.send("productNewRow", this.editedItem);
-
-          // ipcRenderer.on("test", (event, args) => {
-          //   console.log(typeof args)
-          // });
-
+          ipcRenderer.send("productNewRow", this.editedItem);
 
           this.dialog = false;
 
           // notifications
-          // ipcRenderer.on("sendNotifications", (event, args) => {
-          //   this.confirmationAlert.snackbar = args.snackbar;
-          //   this.confirmationAlert.text = args.text;
-          // });
+          ipcRenderer.on("sendNotifications", (event, args) => {
+            this.confirmationAlert.snackbar = args.snackbar;
+            this.confirmationAlert.text = args.text;
+          });
         }
       }
     },

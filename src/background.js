@@ -89,7 +89,7 @@ const excelPathFunc = () => {
   return excelPath
 }
 
-const dataExcel = () => {
+const dataExcelFull = () => {
   const excelPath = excelPathFunc()
   return readExcel(excelPath)
 }
@@ -109,7 +109,7 @@ ipcMain.on('verificationData', (event, args) => {
   if (args) {
     console.log('existe data, no cargar nada en el front');
   } else {
-    const data = dataExcel()
+    const data = dataExcelFull()
     event.reply('dtaExcel', data)
   }
 })
@@ -117,9 +117,8 @@ ipcMain.on('verificationData', (event, args) => {
 // delete row in excel
 // faltantes, validar si en el excel se elimina y enviar mensaje de confirmacion
 ipcMain.on('deleteRow', (event, args) => {
-  const data = dataExcel()
-  data.splice(args, 1)
-
+  const data = dataExcelFull()
+  data.splice(data[args], 1)
   //send notifications
   notifications(event, true, "Se eliminó correctamente.", "green lighten-1")
 })
@@ -127,8 +126,9 @@ ipcMain.on('deleteRow', (event, args) => {
 // edit row in excel
 // faltantes, validar si en el excel se editó y enviar mensaje de confirmacion
 ipcMain.on('editRow', (event, args) => {
-  // const data = dataExcel()
-  // console.log(data[args])
+  const { index, dataChanged } = args
+  const data = dataExcelFull()
+  Object.assign(data[index], dataChanged);
 
   //send notifications
   notifications(event, true, "Se editó correctamente.", "green lighten-1")
@@ -137,8 +137,8 @@ ipcMain.on('editRow', (event, args) => {
 // item new row in excel
 // faltantes, validar si en el excel se guardó y enviar mensaje de confirmacion
 ipcMain.on('productNewRow', (event, args) => {
-  // const data = dataExcel()
-  console.log(args)
+  const data = dataExcelFull()
+  data.push(args)
 
   //send notifications
   notifications(event, true, "Se guardó correctamente.", "green lighten-1")
