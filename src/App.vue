@@ -1,18 +1,18 @@
 <template>
   <v-app style="-webkit-app-region: drag">
-    <v-btn
-        :loading="loadingBeginning.loading5"
-        :disabled="loadingBeginning.loading5"
+    <div class="text-center" v-if="this.desserts.length === 0">
+      <v-btn
+        :loading="loadingIcon.show"
+        :disabled="loadingIcon.show"
         color="blue-grey"
         class="ma-2 white--text"
         fab
-        @click="loader = 'loading5'"
       >
-        <v-icon dark>
-          mdi-cloud-upload
-        </v-icon>
-    </v-btn>
+        <v-icon dark> mdi-cloud-upload </v-icon>
+      </v-btn>
+    </div>
     <v-data-table
+      else
       :headers="headers"
       :items="desserts"
       sort-by="calories"
@@ -50,13 +50,12 @@
 
               <form enctype="multipart/form-data">
                 <v-file-input
+                  v-model="selectFile"
                   style="width: 610px"
                   show-size
                   counter
                   label="Entrada Archivo"
                   type="file"
-                  ref="myfile"
-                  name="excel"
                   @change="onFileSelected"
                 ></v-file-input>
               </form>
@@ -86,7 +85,7 @@
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
 
-          <v-dialog v-model="dialog" max-width="500px">
+          <v-dialog v-model="dialog" max-width="500px" persistent>
             <template v-slot:activator="{ on, attrs }">
               <!-- button deploy file excel -->
               <v-btn color="blue-grey" class="ma-2 white--text" fab>
@@ -248,12 +247,13 @@
         <v-icon small @click="viewItem(item)"> mdi-eye </v-icon>
       </template>
       <template v-slot:no-data>
-        <v-btn color="primary" @click="initialize"> Reset </v-btn>
+        <!-- <v-btn color="primary" @click="initialize"> Reset </v-btn> -->
       </template>
     </v-data-table>
   </v-app>
 </template>
 
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
 import { ipcRenderer } from "electron";
 
@@ -264,10 +264,9 @@ export default {
 
   data: (vm) => ({
     loading: false,
-    selectFile: null,
-    loadingBeginning: {
-      loader: null,
-      loading5: false,
+    selectFile: {},
+    loadingIcon: {
+      show: true,
     },
     rulesValid: {
       valid: true,
@@ -352,18 +351,13 @@ export default {
     date() {
       this.calendar.dateFormatted = this.formatDate(this.date);
     },
-    loader () {
-      const l = this.loadingBeginning.loader
-      this[l] = !this[l]
+  },
 
-      setTimeout(() => (this[l] = false), 3000)
-
-      this.loadingBeginning.loader = null
-    },
+  mounted() {
+    this.loadingIcon.show = true;
   },
 
   created() {
-    this.initialize();
     ipcRenderer.send(
       "verificationData",
       this.desserts.length > 0 ? true : false
@@ -374,71 +368,6 @@ export default {
   },
 
   methods: {
-    initialize() {
-      // this.desserts = [
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Alcohol",
-      //     cantidad: 6.0,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Ice cream sandwich",
-      //     cantidad: 237,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Eclair",
-      //     cantidad: 262,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Cupcake",
-      //     cantidad: 305,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Gingerbread",
-      //     cantidad: 356,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Jelly bean",
-      //     cantidad: 375,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Lollipop",
-      //     cantidad: 392,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Honeycomb",
-      //     cantidad: 408,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "Donut",
-      //     cantidad: 452,
-      //     codigo: 1234132,
-      //   },
-      //   {
-      //     fecha: "07/04/2013 10:30 pm",
-      //     producto: "KitKat",
-      //     cantidad: 518,
-      //     codigo: 1234132,
-      //   },
-      // ];
-    },
-
     formatDate(date) {
       if (!date) return null;
 
@@ -507,17 +436,22 @@ export default {
       });
     },
 
-    deployExcel() {
-      let formData = new FormData();
+    onFileSelected(event) {
+      // event.preventDefault();
+      // event.stopPropagation();
 
-      // files
-      for (let file of this.files) {
-        formData.append("files", file, file.name);
-      }
+      this.selectFile = event;
+      console.log("onFileSelected", event);
     },
 
-    onFileSelected(event) {
-      this.file = event;
+    deployExcel() {
+      console.log("test");
+      
+      // let formData = new FormData();
+      // formData.append('file', this.selectFile);
+      // ipcRenderer.send("test", this.selectFile);
+
+      // FilePathWithHeaders.push(this.selectFile)
     },
 
     save(newProduct) {
@@ -540,17 +474,22 @@ export default {
       } else {
         if (validateInputs) {
           newProduct.fecha = this.formatDate(this.date);
-          this.desserts.push(this.editedItem);
+          // this.desserts.push(this.editedItem);
 
-          ipcRenderer.send("productNewRow", this.editedItem);
+          // ipcRenderer.send("productNewRow", this.editedItem);
+
+          // ipcRenderer.on("test", (event, args) => {
+          //   console.log(typeof args)
+          // });
+
 
           this.dialog = false;
 
           // notifications
-          ipcRenderer.on("sendNotifications", (event, args) => {
-            this.confirmationAlert.snackbar = args.snackbar;
-            this.confirmationAlert.text = args.text;
-          });
+          // ipcRenderer.on("sendNotifications", (event, args) => {
+          //   this.confirmationAlert.snackbar = args.snackbar;
+          //   this.confirmationAlert.text = args.text;
+          // });
         }
       }
     },
