@@ -481,10 +481,10 @@ export default {
           this.dialog = false;
 
           // notifications
-          ipcRenderer.on("sendNotifications", (event, args) => {
-            this.confirmationAlert.snackbar = args.snackbar;
-            this.confirmationAlert.text = args.text;
-          });
+          // ipcRenderer.on("sendNotifications", (event, args) => {
+          //   this.confirmationAlert.snackbar = args.snackbar;
+          //   this.confirmationAlert.text = args.text;
+          // });
         }
       }
     },

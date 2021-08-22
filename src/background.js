@@ -6,6 +6,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import path from 'path'
 
 import XLSX from 'xlsx'
+import Excel from 'exceljs'
 
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -94,7 +95,7 @@ const dataExcelFull = () => {
   return readExcel(excelPath)
 }
 
-const notifications = (event, show=false, text="", color="") => {
+const notifications = (event, show = false, text = "", color = "") => {
   event.reply('sendNotifications', {
     snackbar: show,
     text,
@@ -134,14 +135,33 @@ ipcMain.on('editRow', (event, args) => {
   notifications(event, true, "Se editó correctamente.", "green lighten-1")
 })
 
+const dirExcel = async () => {
+  const file = excelPathFunc()
+  const workbook = new Excel.Workbook();
+  await workbook.xlsx.readFile(file)
+  const worksheet = workbook.getWorksheet("data");
+  return worksheet
+}
+
 // item new row in excel
 // faltantes, validar si en el excel se guardó y enviar mensaje de confirmacion
-ipcMain.on('productNewRow', (event, args) => {
-  const data = dataExcelFull()
-  data.push(args)
+ipcMain.on('productNewRow', async (event, args) => {
+  const file = excelPathFunc()
+
+  const workbook = new Excel.Workbook();
+  await workbook.xlsx.readFile(file)
+  const worksheet = workbook.getWorksheet("data");
+  const rowData = Object.values(args)
+  worksheet.addRow(rowData)
+
+  await workbook.xlsx.writeFile(file);
+
+  // const data = dataExcelFull()
+  // console.log(args);
+  // data.push(args)
 
   //send notifications
-  notifications(event, true, "Se guardó correctamente.", "green lighten-1")
+  // notifications(event, true, "Se guardó correctamente.", "green lighten-1")
 })
 
 // Quit when all windows are closed.
